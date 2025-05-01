@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preload" href="script.js" as="script">
+    <title>Nova guia</title>
+    <style>
+        body {
+            background-color: transparent; /* Garante que o fundo seja transparente */
+        }
+        :root {
+            --gap-x: 5px; /* MODIFIQUE AQUI O ESPAÇAMENTO HORIZONTAL */
+            --gap-y: 20px; /* MODIFIQUE AQUI O ESPAÇAMENTO VERTICAL */
+            --cols: 9;    /* MODIFIQUE AQUI O NÚMERO DE COLUNAS */
+            --rows: 7;    /* MODIFIQUE AQUI O NÚMERO DE LINHAS */
+            --font-size: 18px; /* MODIFIQUE AQUI O TAMANHO DA FONTE DOS ATALHOS */
+            --tile-size: 20px; /* Tamanho do conteiner padrão dos atalhos */
+
+        }
+
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: white;
+            padding-top: 80px; /* Adiciona um espaço no topo para empurrar o conteúdo para baixo */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centraliza os elementos horizontalmente */
+            height: 100vh; /* Define a altura do body para 100% da viewport */
+            overflow: hidden; /* Impede que o conteúdo interno cause rolamento */
+        }
+
+        @media (prefers-color-scheme: dark) {
+        body {
+            background-color: #1e1e1e; /* Cor para tema escuro */
+        }
+        }
+
+        #search-form {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px; /* Adiciona um pouco de espaço abaixo da barra de pesquisa */
+            max-width: 600px;
+            padding: 8px 15px;
+            background-color: rgba(30, 30, 30, 0.8);
+            border-radius: 25px;
+            width: 100%; /* Garante que a barra de pesquisa não fique muito estreita em telas menores */
+        }
+
+        #search-form input {
+            flex: 1;
+            padding: 8px 16px 8px 50px;
+            font-size: 16px;
+            border: none;
+            background: transparent;
+            color: white;
+            outline: none;
+            min-width: 400px; /* Permite que a largura se ajuste ao container */
+        }
+
+        #search-form input::placeholder {
+            color: #aaa;
+        }
+
+        #search-container {
+            position: relative;
+            width: 100%;
+        }
+
+        #search-form img.google-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 18px;
+            pointer-events: none;
+            filter: none;
+        }
+
+        #grid {  /* Estilo da grade de atalhos */
+            display: grid;
+            grid-template-columns: repeat(var(--cols), 1fr);
+            grid-template-rows: repeat(var(--rows), 1fr);
+            gap: var(--gap-y) var(--gap-x);
+            padding: 20px;
+            max-width: 1000px;
+            width: 100%; /* Garante que a grade não fique muito estreita em telas menores */
+            margin-bottom: 20px; /* Adiciona um pouco de espaço abaixo da grade */
+        }
+
+        .tile {  /* Estilo dos atalhos */
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            font-size: var(--font-size);
+            user-select: none;
+        }
+
+        .tile img {  /* Ícone do atalho */
+            width: 52px; /* Tamanho do ícone */
+            height: 52px; /* Tamanho do ícone */
+            object-fit: contain;
+            margin-bottom: 6px; /* Espaço entre o ícone e o texto */
+        }
+
+        .tile:visited {
+            color: white;
+        }
+
+        .add-btn {  /* Botão de adicionar atalho */
+            width: 60px;
+            height: 60px;
+            font-size: 32px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px dashed white;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #settings-btn {  /* Botão de configurações */
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(255,255,255,0.05); /* Fundo do botão */
+            color: white;
+            border: none;
+            padding: 13px 18px;
+            cursor: pointer;
+            border-radius: 8px;
+            z-index: 101; /* Garante que o botão esteja acima do painel */
+            user-select: none;
+        }
+
+        #settings-panel {
+            position: fixed;
+            bottom: 60px;
+            left: 16px;
+            background: rgba(20, 20, 20, 0.45); /* Fundo do painel */
+            padding: 10px;
+            border-radius: 8px;
+            display: none; /* Inicialmente oculto */
+            flex-direction: column;
+            gap: 6px;
+            z-index: 100; /* Garante que o painel esteja acima do conteúdo principal */
+        }
+
+        #settings-panel label {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <form id="search-form" action="https://www.google.com/search" method="get">
+        <div id="search-container">
+            <img class="google-icon" src="https://www.google.com/favicon.ico" alt="Google" />
+            <input type="text" name="q" placeholder="Pesquise com Google ou digite um endereço" autocomplete="off" style="border-bottom: none; padding-right: 16px;" />
+        </div>
+    </form>
+
+    <div id="grid"></div>
+
+    <button id="settings-btn">☰</button>
+    <div id="settings-panel">
+        <label for="bg-input-settings">Wallpaper:</label>
+        <input type="file" id="bg-input-settings" accept="image/*" />
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

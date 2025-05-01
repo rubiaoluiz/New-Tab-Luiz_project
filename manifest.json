@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Nova Aba Corrigida",
+  "version": "1.1.0",
+  "description": "New tab com atalhos estilo Speed Dial.",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage",
+    "http://localhost:5500/*"
+  ],
+  "icons": {
+    "128": "icon.png"
+  }
+}
