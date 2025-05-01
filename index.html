@@ -12,11 +12,14 @@
         :root {
             --gap-x: 5px; /* MODIFIQUE AQUI O ESPAÇAMENTO HORIZONTAL */
             --gap-y: 20px; /* MODIFIQUE AQUI O ESPAÇAMENTO VERTICAL */
-            --cols: 9;    /* MODIFIQUE AQUI O NÚMERO DE COLUNAS */
-            --rows: 7;    /* MODIFIQUE AQUI O NÚMERO DE LINHAS */
+            --cols: 9;     /* MODIFIQUE AQUI O NÚMERO DE COLUNAS */
+            --rows: 7;     /* MODIFIQUE AQUI O NÚMERO DE LINHAS */
             --font-size: 18px; /* MODIFIQUE AQUI O TAMANHO DA FONTE DOS ATALHOS */
             --tile-size: 20px; /* Tamanho do conteiner padrão dos atalhos */
-
+            --page-button-color: rgba(30, 30, 30, 0.8);
+            --page-button-text-color: white;
+            --page-button-padding: 8px 12px;
+            --page-button-border-radius: 5px;
         }
 
         body {
@@ -27,11 +30,12 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
             color: white;
-            padding-top: 80px; /* Adiciona um espaço no topo para empurrar o conteúdo para baixo */
+            padding-top: 120px; /* Adiciona um espaço no topo para espaço dos botões de página */
             display: flex;
             flex-direction: column;
             align-items: center; /* Centraliza os elementos horizontalmente */
-            height: 100vh; /* Define a altura do body para 100% da viewport */
+            min-height: 100vh; /* Define a altura do body para 100% da viewport */
+            box-sizing: border-box;
             overflow: hidden; /* Impede que o conteúdo interno cause rolamento */
         }
 
@@ -83,7 +87,63 @@
             filter: none;
         }
 
-        #grid {  /* Estilo da grade de atalhos */
+        #page-buttons-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+            gap: 5px;
+        }
+
+        .page-button {
+            background-color: var(--page-button-color);
+            color: var(--page-button-text-color);
+            padding: var(--page-button-padding);
+            border-radius: var(--page-button-border-radius);
+            cursor: pointer;
+            user-select: none;
+            font-size: 14px;
+            border: none;
+        }
+
+        .page-button.active {
+            font-weight: bold;
+            /* Adicione estilos para a página ativa, se desejar */
+        }
+
+        .add-page-button {
+            background-color: var(--page-button-color);
+            color: var(--page-button-text-color);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            border: none;
+        }
+
+        .page-button-context-menu {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            position: absolute;
+            z-index: 1001; /* Acima do context menu dos atalhos */
+        }
+
+        .page-button-context-menu div {
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        .page-button-context-menu div:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        #grid {   /* Estilo da grade de atalhos */
             display: grid;
             grid-template-columns: repeat(var(--cols), 1fr);
             grid-template-rows: repeat(var(--rows), 1fr);
@@ -94,7 +154,7 @@
             margin-bottom: 20px; /* Adiciona um pouco de espaço abaixo da grade */
         }
 
-        .tile {  /* Estilo dos atalhos */
+        .tile {   /* Estilo dos atalhos */
             text-align: center;
             text-decoration: none;
             color: white;
@@ -102,7 +162,7 @@
             user-select: none;
         }
 
-        .tile img {  /* Ícone do atalho */
+        .tile img {   /* Ícone do atalho */
             width: 52px; /* Tamanho do ícone */
             height: 52px; /* Tamanho do ícone */
             object-fit: contain;
@@ -113,7 +173,7 @@
             color: white;
         }
 
-        .add-btn {  /* Botão de adicionar atalho */
+        .add-btn {   /* Botão de adicionar atalho */
             width: 60px;
             height: 60px;
             font-size: 32px;
@@ -124,7 +184,7 @@
             cursor: pointer;
         }
 
-        #settings-btn {  /* Botão de configurações */
+        #settings-btn {   /* Botão de configurações */
             position: fixed;
             bottom: 16px;
             left: 16px;
@@ -164,12 +224,16 @@
         </div>
     </form>
 
+    <div id="page-buttons-container">
+        <button id="add-page-button" title="Adicionar nova página">+</button>
+    </div>
+
     <div id="grid"></div>
 
     <button id="settings-btn">☰</button>
     <div id="settings-panel">
-        <label for="bg-input-settings">Wallpaper:</label>
-        <input type="file" id="bg-input-settings" accept="image/*" />
+        <label for="wallpaper-url">URL do Wallpaper:</label>
+        <input type="url" id="wallpaper-url" placeholder="Digite a URL da imagem">
     </div>
 
     <script src="script.js"></script>

@@ -2,54 +2,82 @@ const grid = document.getElementById('grid');
 const settingsBtn = document.getElementById('settings-btn');
 const settingsPanel = document.getElementById('settings-panel');
 const body = document.body;
-const serverUrl = 'http://localhost:5500';
 let currentContextMenuTarget = null;
 let settingsPanelVisible = false;
+let pagesData = {};
+let currentPage = 'Principal';
+const pageButtonsContainer = document.getElementById('page-buttons-container');
+let currentPageButton = null;
+let contextMenuPageButtonTarget = null;
+const wallpaperUrlInput = document.getElementById('wallpaper-url');
 
 (function() {
-    const savedImageUrl = localStorage.getItem('backgroundImageUrl');
+    const savedWallpaperUrl = localStorage.getItem('wallpaperUrl');
     body.style.backgroundColor = 'transparent';
-    if (savedImageUrl) {
-        const fullImageUrl = savedImageUrl.startsWith('http') ? savedImageUrl : serverUrl + savedImageUrl;
-        body.style.backgroundImage = `url('${fullImageUrl}')`;
-        body.style.backgroundSize = 'cover';
-        body.style.backgroundPosition = 'center';
+    if (savedWallpaperUrl) {
+        applyWallpaper(savedWallpaperUrl);
+        wallpaperUrlInput.value = savedWallpaperUrl;
+    } else {
+        applyWallpaper(''); // Define um background padrão ou transparente
+        wallpaperUrlInput.value = '';
     }
+
+    // Garante que a página 'Principal' exista e seja a primeira aberta
+    pagesData = getPages();
+    if (!pagesData['Principal']) {
+        pagesData['Principal'] = [];
+        savePages(pagesData);
+    }
+    currentPage = localStorage.getItem('currentPage') || 'Principal';
+    renderPageButtons();
+    switchToPage(currentPage); // Abre a página principal na inicialização
 })();
 
-function applyWallpaper(imageUrl) {
-    const fullImageUrl = serverUrl + imageUrl;
-    body.style.backgroundImage = `url('${fullImageUrl}')`;
-    body.style.backgroundSize = 'cover';
-    body.style.backgroundPosition = 'center';
+function applyWallpaper(url) {
+    body.style.backgroundImage = url ? `url('${url}')` : 'none';
+    body.style.backgroundSize = url ? 'cover' : 'auto';
+    body.style.backgroundPosition = url ? 'center' : 'center';
+    body.style.backgroundRepeat = url ? 'no-repeat' : 'repeat';
+    body.style.backgroundAttachment = 'fixed';
     body.style.backgroundColor = 'transparent';
-    localStorage.setItem('backgroundImageUrl', imageUrl);
+    localStorage.setItem('wallpaperUrl', url);
 }
 
-function getSites() {
-    return JSON.parse(localStorage.getItem('atalhos') || '[]');
+function getPages() {
+    const storedPages = localStorage.getItem('atalhosPages');
+    return storedPages ? JSON.parse(storedPages) : { "Principal": [] };
 }
 
-function saveSites(sites) {
-    localStorage.setItem('atalhos', JSON.stringify(sites));
+function savePages(pages) {
+    localStorage.setItem('atalhosPages', JSON.stringify(pages));
+}
+
+function getCurrentSites() {
+    return getPages()[currentPage] || [];
+}
+
+function saveCurrentSites(sites) {
+    const pages = getPages();
+    pages[currentPage] = sites;
+    savePages(pages);
 }
 
 function removeSite(indexToRemove) {
-    let sites = getSites();
-    sites = sites.filter((_, index) => index !== indexToRemove);
-    saveSites(sites);
+    const currentSites = getCurrentSites();
+    const updatedSites = currentSites.filter((_, index) => index !== indexToRemove);
+    saveCurrentSites(updatedSites);
     render();
 }
 
 function updateSite(indexToUpdate, newName, newUrl, newImageUrl) {
-    let sites = getSites();
-    if (sites[indexToUpdate]) {
-        sites[indexToUpdate].nome = newName;
-        sites[indexToUpdate].url = newUrl;
+    const currentSites = getCurrentSites();
+    if (currentSites[indexToUpdate]) {
+        currentSites[indexToUpdate].nome = newName;
+        currentSites[indexToUpdate].url = newUrl;
         if (newImageUrl !== undefined) {
-            sites[indexToUpdate].imageUrl = newImageUrl;
+            currentSites[indexToUpdate].imageUrl = newImageUrl;
         }
-        saveSites(sites);
+        saveCurrentSites(currentSites);
         render();
     }
 }
@@ -88,11 +116,11 @@ function renderContextMenu(event, index) {
     editNameOption.style.cursor = 'pointer';
     editNameOption.style.padding = '4px 0';
     editNameOption.onclick = () => {
-        const sites = getSites();
-        const currentName = sites[index]?.nome || sites[index]?.url;
+        const currentSites = getCurrentSites();
+        const currentName = currentSites[index]?.nome || currentSites[index]?.url;
         const newName = prompt('Digite o novo nome:', currentName);
         if (newName !== null) {
-            const currentUrl = sites[index]?.url;
+            const currentUrl = currentSites[index]?.url;
             updateSite(index, newName, currentUrl);
         }
         document.getElementById('context-menu')?.remove();
@@ -103,11 +131,11 @@ function renderContextMenu(event, index) {
     editUrlOption.style.cursor = 'pointer';
     editUrlOption.style.padding = '4px 0';
     editUrlOption.onclick = () => {
-        const sites = getSites();
-        const currentUrl = sites[index]?.url;
+        const currentSites = getCurrentSites();
+        const currentUrl = currentSites[index]?.url;
         const newUrl = prompt('Digite o novo URL:', currentUrl);
         if (newUrl) {
-            const currentName = sites[index]?.nome;
+            const currentName = currentSites[index]?.nome;
             updateSite(index, currentName, newUrl);
         }
         document.getElementById('context-menu')?.remove();
@@ -118,12 +146,12 @@ function renderContextMenu(event, index) {
     editImageOption.style.cursor = 'pointer';
     editImageOption.style.padding = '4px 0';
     editImageOption.onclick = () => {
-        const sites = getSites();
-        const currentImageUrl = sites[index]?.imageUrl || `https://www.google.com/s2/favicons?domain=${sites[index]?.url}&sz=64`;
+        const currentSites = getCurrentSites();
+        const currentImageUrl = currentSites[index]?.imageUrl || `https://www.google.com/s2/favicons?domain=${currentSites[index]?.url}&sz=64`;
         const newImageUrl = prompt('Digite a URL da nova imagem:', currentImageUrl);
         if (newImageUrl !== null) {
-            const currentName = sites[index]?.nome;
-            const currentUrl = sites[index]?.url;
+            const currentName = currentSites[index]?.nome;
+            const currentUrl = currentSites[index]?.url;
             updateSite(index, currentName, currentUrl, newImageUrl);
         }
         document.getElementById('context-menu')?.remove();
@@ -145,10 +173,10 @@ function renderContextMenu(event, index) {
 
 function render() {
     grid.innerHTML = '';
-    const sites = getSites();
-    console.log('Dados dos sites carregados:', sites); // Log para verificar os dados
+    const currentSites = getCurrentSites();
+    console.log('Dados da página "' + currentPage + '":', currentSites);
 
-    sites.forEach((site, index) => {
+    currentSites.forEach((site, index) => {
         const div = document.createElement('a');
         div.className = 'tile';
         div.href = site.url;
@@ -165,7 +193,7 @@ function render() {
 
         grid.appendChild(div);
 
-        if (index === sites.length - 1) {
+        if (index === currentSites.length - 1) {
             const addButton = document.createElement('button');
             addButton.innerHTML = '+';
             addButton.className = 'add-btn';
@@ -175,16 +203,16 @@ function render() {
         }
     });
 
-    console.log('Grid renderizada com', sites.length, 'atalhos.'); // Log para verificar a renderização
+    console.log('Grid renderizada com', currentSites.length, 'atalhos na página "' + currentPage + '".');
 }
 
 function openAddSiteForm() {
     const url = prompt('Digite o URL do site:');
     const nome = prompt('Digite o nome do site:');
     if (url) {
-        const sites = getSites();
-        sites.push({ url, nome });
-        saveSites(sites);
+        const currentSites = getCurrentSites();
+        currentSites.push({ url, nome });
+        saveCurrentSites(currentSites);
         render();
     }
 }
@@ -207,35 +235,144 @@ settingsBtn.onclick = () => {
     }
 };
 
-render();
-
-setTimeout(function() {
-    // AQUI TAMBÉM NÃO PRECISAMOS MAIS APLICAR OS ESTILOS SALVOS
-}, 100);
-
-document.getElementById('bg-input-settings').addEventListener('change', async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('wallpaper', file);
-
-    try {
-        const response = await fetch(`${serverUrl}/upload`, {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!response.ok) {
-            throw new Error('Erro ao enviar a imagem para o servidor.');
-        }
-
-        const data = await response.json();
-        if (data.imageUrl) {
-            applyWallpaper(data.imageUrl);
-        }
-    } catch (error) {
-        console.error('Erro ao fazer upload da imagem:', error);
-        alert('Não foi possível enviar a imagem. Tente novamente.');
+function createPageButton(pageName) {
+    const button = document.createElement('button');
+    button.innerText = pageName;
+    button.className = 'page-button';
+    if (pageName === currentPage) {
+        button.classList.add('active');
+        currentPageButton = button;
     }
+    button.addEventListener('click', () => {
+        switchToPage(pageName);
+    });
+
+    button.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        contextMenuPageButtonTarget = pageName;
+        const existingMenu = document.querySelector('.page-button-context-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+        const menu = document.createElement('div');
+        menu.className = 'page-button-context-menu';
+        menu.style.left = `${event.clientX}px`;
+        menu.style.top = `${event.clientY}px`;
+
+        if (pageName !== 'Principal') {
+            const renameOption = document.createElement('div');
+            renameOption.innerText = 'Renomear';
+            renameOption.onclick = () => {
+                const newName = prompt('Novo nome:', pageName);
+                if (newName && newName !== pageName) {
+                    renamePage(pageName, newName);
+                }
+                menu.remove();
+            };
+            menu.appendChild(renameOption);
+
+            const deleteOption = document.createElement('div');
+            deleteOption.innerText = 'Excluir';
+            deleteOption.onclick = () => {
+                if (confirm(`Tem certeza que deseja excluir a página "${pageName}"?`)) {
+                    deletePage(pageName);
+                }
+                menu.remove();
+            };
+            menu.appendChild(deleteOption);
+        }
+
+        document.body.appendChild(menu);
+
+        document.addEventListener('click', function closeMenuOnClickOutside(e) {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenuOnClickOutside);
+            }
+        });
+    });
+
+    return button;
+}
+
+function renderPageButtons() {
+    pageButtonsContainer.innerHTML = '';
+    const pages = getPages();
+    for (const pageName in pages) {
+        pageButtonsContainer.appendChild(createPageButton(pageName));
+    }
+    const addPageButton = document.createElement('button');
+    addPageButton.id = 'add-page-button';
+    addPageButton.innerText = '+';
+    addPageButton.className = 'add-page-button';
+    addPageButton.title = 'Adicionar nova página';
+    addPageButton.addEventListener('click', () => {
+        const newPageName = prompt('Digite o nome da nova página:');
+        if (newPageName) {
+            const pages = getPages();
+            if (!pages[newPageName]) {
+                pages[newPageName] = [];
+                savePages(pages);
+                pageButtonsContainer.appendChild(createPageButton(newPageName));
+                switchToPage(newPageName);
+            } else {
+                alert('Essa página já existe.');
+            }
+        }
+    });
+    pageButtonsContainer.appendChild(addPageButton);
+}
+
+function switchToPage(pageName) {
+    if (currentPageButton) {
+        currentPageButton.classList.remove('active');
+    }
+    currentPage = pageName;
+    const newActiveButton = Array.from(pageButtonsContainer.children).find(button => button.innerText === pageName);
+    if (newActiveButton) {
+        newActiveButton.classList.add('active');
+        currentPageButton = newActiveButton;
+    }
+    render();
+    localStorage.setItem('currentPage', currentPage);
+}
+
+function renamePage(oldName, newName) {
+    const pages = getPages();
+    if (pages[newName]) {
+        alert('Já existe uma página com esse nome.');
+        return;
+    }
+    pages[newName] = pages[oldName];
+    delete pages[oldName];
+    if (currentPage === oldName) {
+        currentPage = newName;
+    }
+    savePages(pages);
+    renderPageButtons();
+    render();
+}
+
+function deletePage(pageToDelete) {
+    const pages = getPages();
+    if (pageToDelete === 'Principal') {
+        alert('A página Principal não pode ser excluída.');
+        return;
+    }
+    delete pages[pageToDelete];
+    if (currentPage === pageToDelete) {
+        switchToPage('Principal');
+    }
+    savePages(pages);
+    renderPageButtons();
+    render();
+}
+
+wallpaperUrlInput.addEventListener('change', () => {
+    const url = wallpaperUrlInput.value.trim();
+    applyWallpaper(url);
+});
+
+window.addEventListener('beforeunload', () => {
+    localStorage.setItem('currentPage', currentPage);
 });
