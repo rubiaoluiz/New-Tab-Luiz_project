@@ -18,19 +18,19 @@ const wallpaperUrlInput = document.getElementById('wallpaper-url');
         applyWallpaper(savedWallpaperUrl);
         wallpaperUrlInput.value = savedWallpaperUrl;
     } else {
-        applyWallpaper(''); // Define um background padrão ou transparente
+        applyWallpaper('');
         wallpaperUrlInput.value = '';
     }
 
-    // Garante que a página 'Principal' exista e seja a primeira aberta
     pagesData = getPages();
     if (!pagesData['Principal']) {
         pagesData['Principal'] = [];
         savePages(pagesData);
     }
-    currentPage = localStorage.getItem('currentPage') || 'Principal';
+
+    currentPage = 'Principal';
     renderPageButtons();
-    switchToPage(currentPage); // Abre a página principal na inicialização
+    switchToPage(currentPage);
 })();
 
 function applyWallpaper(url) {
@@ -180,7 +180,6 @@ function render() {
         const div = document.createElement('a');
         div.className = 'tile';
         div.href = site.url;
-        div.target = '_blank';
         const imageUrl = site.imageUrl || `https://www.google.com/s2/favicons?domain=${site.url}&sz=64`;
         div.innerHTML = `
             <img src="${imageUrl}" alt="${site.nome || site.url}" />
@@ -192,16 +191,17 @@ function render() {
         });
 
         grid.appendChild(div);
-
-        if (index === currentSites.length - 1) {
-            const addButton = document.createElement('button');
-            addButton.innerHTML = '+';
-            addButton.className = 'add-btn';
-            addButton.onclick = () => openAddSiteForm();
-            addButton.style.marginLeft = '23px';
-            grid.appendChild(addButton);
-        }
     });
+
+    // Adiciona o botão de adicionar SEMPRE no final da grade
+    const existingAddButton = grid.querySelector('.add-btn');
+    if (!existingAddButton) {
+        const addButton = document.createElement('button');
+        addButton.innerHTML = '+';
+        addButton.className = 'add-btn';
+        addButton.onclick = () => openAddSiteForm();
+        grid.appendChild(addButton);
+    }
 
     console.log('Grid renderizada com', currentSites.length, 'atalhos na página "' + currentPage + '".');
 }
@@ -296,31 +296,40 @@ function createPageButton(pageName) {
 }
 
 function renderPageButtons() {
+    const addButton = document.getElementById('add-page-button');
+    const wasAddButtonPresent = !!addButton;
+
+    if (wasAddButtonPresent) {
+        pageButtonsContainer.removeChild(addButton);
+    }
+
     pageButtonsContainer.innerHTML = '';
     const pages = getPages();
     for (const pageName in pages) {
         pageButtonsContainer.appendChild(createPageButton(pageName));
     }
-    const addPageButton = document.createElement('button');
-    addPageButton.id = 'add-page-button';
-    addPageButton.innerText = '+';
-    addPageButton.className = 'add-page-button';
-    addPageButton.title = 'Adicionar nova página';
-    addPageButton.addEventListener('click', () => {
+
+    // Recria o botão de adicionar e o adiciona novamente ao final
+    const newAddButton = document.createElement('button');
+    newAddButton.id = 'add-page-button';
+    newAddButton.innerText = '+';
+    newAddButton.className = 'add-page-button';
+    newAddButton.title = 'Adicionar nova página';
+    newAddButton.addEventListener('click', () => {
         const newPageName = prompt('Digite o nome da nova página:');
         if (newPageName) {
             const pages = getPages();
             if (!pages[newPageName]) {
                 pages[newPageName] = [];
                 savePages(pages);
-                pageButtonsContainer.appendChild(createPageButton(newPageName));
+                renderPageButtons(); // Renderiza novamente para incluir o novo botão
                 switchToPage(newPageName);
             } else {
                 alert('Essa página já existe.');
             }
         }
     });
-    pageButtonsContainer.appendChild(addPageButton);
+    pageButtonsContainer.appendChild(newAddButton);
 }
 
 function switchToPage(pageName) {
