@@ -11,6 +11,11 @@ let currentPageButton = null;
 let contextMenuPageButtonTarget = null;
 const wallpaperUrlInput = document.getElementById('wallpaper-url');
 
+// Elementos do relógio
+const clockContainer = document.getElementById('clock-container');
+const clockElement = document.getElementById('clock');
+const dateElement = document.getElementById('date'); 
+
 (function() {
     const savedWallpaperUrl = localStorage.getItem('wallpaperUrl');
     body.style.backgroundColor = 'transparent';
@@ -31,6 +36,10 @@ const wallpaperUrlInput = document.getElementById('wallpaper-url');
     currentPage = 'Principal';
     renderPageButtons();
     switchToPage(currentPage);
+
+    // Inicialização do relógio
+    updateClock();
+    setInterval(updateClock, 1000);
 })();
 
 function applyWallpaper(url) {
@@ -385,3 +394,20 @@ wallpaperUrlInput.addEventListener('change', () => {
 window.addEventListener('beforeunload', () => {
     localStorage.setItem('currentPage', currentPage);
 });
+
+// Função para atualizar o relógio com o fuso horário local
+function updateClock() {
+    const now = new Date();
+    const options = {
+        hour: '2-digit',
+        minute: '2-digit',
+    };
+    clockElement.innerText = new Intl.DateTimeFormat([], options).format(now);
+
+    const dateOptions = {
+        weekday: 'long', // Exibe o dia da semana por extenso (ex: "Friday")
+        day: 'numeric',   // Exibe o dia do mês (ex: "2")
+        month: 'long'    // Exibe o mês por extenso (ex: "May")
+    };
+    dateElement.innerText = new Intl.DateTimeFormat([], dateOptions).format(now);
+}
