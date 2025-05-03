@@ -16,6 +16,11 @@ const clockContainer = document.getElementById('clock-container');
 const clockElement = document.getElementById('clock');
 const dateElement = document.getElementById('date'); 
 
+// Elementos de importação e exportação
+const exportBookmarksBtn = document.getElementById('export-bookmarks-btn');
+const importBookmarksBtn = document.getElementById('import-bookmarks-btn');
+const importBookmarksFile = document.getElementById('import-bookmarks-file');
+
 (function() {
     const savedWallpaperUrl = localStorage.getItem('wallpaperUrl');
     body.style.backgroundColor = 'transparent';
@@ -40,6 +45,11 @@ const dateElement = document.getElementById('date');
     // Inicialização do relógio
     updateClock();
     setInterval(updateClock, 1000);
+
+    // Event listeners para importação e exportação
+    exportBookmarksBtn.addEventListener('click', exportBookmarks);
+    importBookmarksBtn.addEventListener('click', () => importBookmarksFile.click()); // Simula o clique no input file
+    importBookmarksFile.addEventListener('change', importBookmarks);
 })();
 
 function applyWallpaper(url) {
@@ -50,6 +60,45 @@ function applyWallpaper(url) {
     body.style.backgroundAttachment = 'fixed';
     body.style.backgroundColor = 'transparent';
     localStorage.setItem('wallpaperUrl', url);
+}
+
+function exportBookmarks() {
+    const dataStr = JSON.stringify(getPages());
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'meus_atalhos.json';
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    document.body.appendChild(linkElement);
+    linkElement.click();
+    document.body.removeChild(linkElement);
+}
+
+function importBookmarks(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedPages = JSON.parse(e.target.result);
+                localStorage.setItem('atalhosPages', JSON.stringify(importedPages));
+                pagesData = importedPages;
+                renderPageButtons();
+                switchToPage('Principal'); // Ou a última página visitada antes da exportação
+                alert('Atalhos importados com sucesso!');
+            } catch (error) {
+                alert('Erro ao importar os atalhos: Arquivo JSON inválido.');
+                console.error('Erro ao importar os atalhos:', error);
+            }
+        };
+        reader.onerror = function() {
+            alert('Erro ao ler o arquivo.');
+        };
+        reader.readAsText(file);
+        // Limpa o valor do input file para permitir a importação do mesmo arquivo novamente
+        event.target.value = null;
+    }
 }
 
 function getPages() {
